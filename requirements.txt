@@ -1,0 +1,4 @@
+krpc==0.4.5
+protobuf==3.5.2.post1
+pyserial==3.4
+six==1.11.0
