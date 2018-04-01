@@ -9,7 +9,7 @@ class FlightController:
     def __init__(self, com_port, baud_rate):
         self.controller = serial.Serial(com_port, baud_rate)
         self.input_commands = dict()
-        self.output_commands = dict()
+        self.output_commands = list()
         self.vars = dict()
 
     def parse_command(self):
@@ -22,6 +22,22 @@ class FlightController:
             return cmd.split(':')
         else:
             return cmd, None
+
+    def send_command(self, command, end='\n'):
+        """
+        Sends a command over serial.
+        Always sends it as a string, and separates commands with newline.
+        :param command: command to send
+        :param end: end of command, works like end in strings.
+        :return:
+        """
+        if type(command) != str:
+            command = str(command)
+        self.controller.write(command)
+        if end:
+            if type(end) != str:
+                end = str(end)
+            self.controller.write(end)
 
     def set_variable(self, name, value):
         """
@@ -54,6 +70,19 @@ class FlightController:
             return wrapper
         return decorator
 
+    def register_output_command(self, func):
+        """
+        Decorator for adding an output command send to the Arduino
+        :param func: function to be wrapped
+        :return: wrapped function
+        """
+        self.output_commands.append(func)
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+        return wrapper
+
     def run_loop(self, fps=None):
         """
         Run the main loop, and start interpreting commands.
@@ -79,14 +108,18 @@ class FlightController:
                 else:
                     print('Unknown command received: ', cmd)
 
+            # Outputs.
+            for task in self.output_commands:
+                print('Running: ', task.__name__)
+                task()
+            # Limit refresh rate.
             if delay:
                 time.sleep(delay)
 
     @staticmethod
-    def connect_krpc(name):
+    def connect_krpc(name, **kwargs):
         """
-        Keep reconnecting to krpc sercer
-        TODO: take ip/port as params as well.
+        Keep reconnecting to krpc server
         :param name:
         :return:
         """
@@ -94,7 +127,7 @@ class FlightController:
         while True:
             try:
                 # Try connecting
-                conn = krpc.connect(name=name)
+                conn = krpc.connect(name=name, **kwargs)
             except ConnectionRefusedError:
                 # Didn't work, wait a bit and try again
                 # TODO: Make non deterministic indicator (I know right)
