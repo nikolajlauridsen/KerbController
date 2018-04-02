@@ -1,4 +1,6 @@
 #include <Arduino.h>
+#include <LiquidCrystal_I2C.h>
+
 #define StageLight 13
 #define StageBtn 2
 #define Throttle A0
@@ -14,6 +16,8 @@ correct = 335
 cutoff = 10
 */
 
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
 void setup() {
   // Set up IO
   pinMode(StageLight, OUTPUT);
@@ -23,6 +27,11 @@ void setup() {
   pinMode(StageBtn, INPUT);
   pinMode(Throttle, INPUT);
   pinMode(SAS, INPUT);
+  // Screen
+  lcd.init();
+  lcd.backlight();
+  lcd.setCursor(0,0);
+  lcd.print("Hello, world!");
   Serial.begin(9600);
   digitalWrite(StageLight, HIGH);
 }
@@ -39,6 +48,8 @@ unsigned int yaw;
 unsigned int pitch;
 unsigned int prevYaw;
 unsigned int prevPitch;
+
+String command = "";
 void loop() {
   // Buttons
   stageHigh = digitalRead(StageBtn);
@@ -93,5 +104,49 @@ void loop() {
       prevYaw = yaw;
   }
 
+  // Read inputs from computer
+  if (Serial.available() > 0){
+      /*
+      lcd.print("Reading serial");
+      char readChar;
+      while (1){
+          readChar = Serial.read();
+          if (readChar == '\n'){
+              break;
+          } else {
+              command += readChar;
+          }
+      }
+      */
+      command = Serial.readStringUntil('\n');
+  }
+
+  // Do stuff with input
+  if (command.length() > 0){
+      Serial.println("Setting screen.");
+      lcd.clear();
+      lcd.setCursor(0,0);
+      if(command.length() > 16){
+          String line1 = command.substring(0, 16);
+          String line2 = command.substring(16, command.length());
+          lcd.print(line1);
+          lcd.setCursor(0, 1);
+          lcd.print(line2);
+      } else {
+          lcd.print(command);
+      }
+
+      /*
+      for(unsigned int i = 0; (i>command.length() && i < 16); i++){
+          lcd.print(command[i]);
+          if(i == 15){
+              lcd.setCursor(0,1);
+          }
+      }
+      */
+  }
+
+  // Reset input
+  command = "";
   delay(200);
 }

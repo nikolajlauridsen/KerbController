@@ -1,8 +1,13 @@
 from KerbController.FlightController import FlightController
-from KerbController.help import mapvalue
+from KerbController.help import mapvalue, eng_notate
 
 Controller = FlightController('COM4', 9600)
 Kerb = FlightController.connect_krpc('FlightController')
+
+Controller.set_variable('prevYaw', 0)
+Controller.set_variable('prevPitch', 0)
+Controller.set_variable('prevThrust', '')
+Controller.set_variable('prevApoapsis', '')
 
 
 @Controller.register_input_command('go')
@@ -16,10 +21,6 @@ def throttle(*args):
     throt = float(args[0])/100
     Controller.get_ship(Kerb).control.throttle = throt
     print('Throttle set to: ', throt)
-
-
-Controller.set_variable('prevYaw', 0)
-Controller.set_variable('prevPitch', 0)
 
 
 @Controller.register_input_command('c')
@@ -45,6 +46,24 @@ def joystick(*args):
         print('New pitch: ', pitch)
         Controller.get_ship(Kerb).control.pitch = pitch
         Controller.set_variable('prevPitch', pitch)
+
+
+@Controller.register_output_command
+def screen():
+    current_thrust = eng_notate(Controller.get_ship(Kerb).thrust)
+    current_apoapsis = eng_notate(Controller.get_ship(Kerb).orbit.apoapsis_altitude)
+    if current_thrust != Controller.get_variable('prevThrust') or current_apoapsis != Controller.get_variable('prevaAoapsis'):
+        line1_label = 'Thrust: '
+        line2_label = 'pk: '
+        line1 = '{}{}{}'.format(line1_label, " " * (16-len(line1_label)-len(current_thrust)),
+                                current_thrust)
+
+        line2 = '{}{}{}'.format(line2_label, " " * (16 - len(line2_label) - len(current_apoapsis)),
+                                current_apoapsis)
+
+        Controller.send_command(line1+line2)
+        Controller.set_variable('prevThrust', current_thrust)
+        Controller.set_variable('prevaAoapsis', current_apoapsis)
 
 
 print('Running main loop.')

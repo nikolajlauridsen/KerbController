@@ -33,11 +33,11 @@ class FlightController:
         """
         if type(command) != str:
             command = str(command)
-        self.controller.write(command)
+        self.controller.write(command.encode('utf-8'))
         if end:
             if type(end) != str:
                 end = str(end)
-            self.controller.write(end)
+            self.controller.write(end.encode('utf-8'))
 
     def set_variable(self, name, value):
         """
@@ -110,7 +110,6 @@ class FlightController:
 
             # Outputs.
             for task in self.output_commands:
-                print('Running: ', task.__name__)
                 task()
             # Limit refresh rate.
             if delay:
@@ -139,12 +138,10 @@ class FlightController:
 
     @staticmethod
     def get_ship(kerb):
-        print('Getting ship.', end='', flush=True)
         while True:
             try:
                 kerb.space_center.active_vessel.name
             except RPCError:
-                print('', end='.', flush=True)
                 time.sleep(0.3)
                 continue
             return kerb.space_center.active_vessel
