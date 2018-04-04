@@ -6,7 +6,7 @@
 #define Throttle A0
 #define YAW A1
 #define PITCH A2
-#define SAS 3
+#define SAS 4
 #define SAS_INDI 12
 #define ThrottleCorrect 500
 #define ThrottleCutoff 8
@@ -38,8 +38,6 @@ void setup() {
 
 bool stageState = false;
 bool stageHigh = false;
-bool sasState = false;
-bool sasOn = false;
 unsigned int throttleSens = 5;
 unsigned int throttleValue;
 float throttleFactor;
@@ -48,6 +46,8 @@ unsigned int yaw;
 unsigned int pitch;
 unsigned int prevYaw;
 unsigned int prevPitch;
+bool prevSAS;
+bool currentSAS;
 
 String command = "";
 void loop() {
@@ -62,21 +62,13 @@ void loop() {
     stageState = false;
   }
 
-  if(digitalRead(SAS)){
-      if(!sasState){
-          Serial.println("sas");
-          sasState = true;
-          if(sasOn){
-              sasOn = false;
-              digitalWrite(SAS_INDI, LOW);
-          } else {
-              sasOn = true;
-              digitalWrite(SAS_INDI, HIGH);
-          }
-      }
-  } else {
-      sasState = false;
-  }
+  // SAS
+  currentSAS = digitalRead(SAS);
+  if(prevSAS != currentSAS){
+     Serial.print("sas:");
+     Serial.println(!currentSAS);
+     prevSAS = currentSAS;
+ }
 
   // Throttle
   throttleValue = analogRead(Throttle);

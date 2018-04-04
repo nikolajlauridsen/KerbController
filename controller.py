@@ -48,6 +48,16 @@ def joystick(*args):
         Controller.set_variable('prevPitch', pitch)
 
 
+@Controller.register_input_command('sas')
+def sas(*args):
+    if args[0] == "1":
+        Controller.get_ship(Kerb).control.sas = True
+        print('SAS Activated.')
+    else:
+        Controller.get_ship(Kerb).control.sas = False
+        print('SAS deactivated.')
+
+
 @Controller.register_output_command
 def screen():
     current_thrust = eng_notate(Controller.get_ship(Kerb).thrust)
