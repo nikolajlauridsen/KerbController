@@ -8,8 +8,6 @@ class Screen:
         if hasattr(self, 'fps'):
             if self.fps:
                 return 1/self.fps
-        else:
-            return None
 
     @delay.setter
     def delay(self, delay):
