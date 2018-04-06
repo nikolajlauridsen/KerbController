@@ -1,5 +1,5 @@
 from KerbController.FlightController import FlightController
-from KerbController.help import mapvalue, eng_notate
+from KerbController.Utility.Math import mapvalue, eng_notate
 
 Controller = FlightController('COM4', 9600)
 Kerb = FlightController.connect_krpc('FlightController')
