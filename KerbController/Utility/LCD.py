@@ -2,19 +2,19 @@
 class Screen:
     def __init__(self, fps=10):
         self.fps = fps
-        self.delay = float
 
     @property
-    def fps(self):
-        return self.fps
+    def delay(self):
+        if hasattr(self, 'fps'):
+            if self.fps:
+                return 1/self.fps
+        else:
+            return None
 
-    @fps.setter
-    def fps(self, fps):
-        self.delay = 1 / fps
-        self.fps = fps
+    @delay.setter
+    def delay(self, delay):
+        self.fps = 1/delay
 
-    @fps.deleter
-    def fps(self):
-        self.delay = None
-        return None
-
+    @delay.deleter
+    def delay(self):
+        self.fps = None
