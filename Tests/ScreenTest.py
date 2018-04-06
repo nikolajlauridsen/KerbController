@@ -5,7 +5,7 @@ from KerbController.Utility.LCD import Screen
 class ScreenTest(unittest.TestCase):
 
     def setUp(self):
-        self.screen = Screen()
+        self.screen = Screen(fps=10)
 
     def tearDown(self):
         self.screen.fps = 10
@@ -26,7 +26,7 @@ class ScreenTest(unittest.TestCase):
 
     def test_fps_del(self):
         del self.screen.fps
-        self.assertEqual(self.screen.fps, None)
+        self.assertEqual(hasattr(self.screen, 'fps'), False)
         self.assertEqual(self.screen.delay, None)
 
     def test_delay_del(self):
