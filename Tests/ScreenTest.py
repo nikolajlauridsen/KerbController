@@ -5,7 +5,7 @@ from KerbController.Utility.LCD import Screen
 class ScreenTest(unittest.TestCase):
 
     def setUp(self):
-        self.screen = Screen(fps=10)
+        self.screen = Screen(fps=10, serial=None)
 
     def tearDown(self):
         self.screen.fps = 10
@@ -33,6 +33,40 @@ class ScreenTest(unittest.TestCase):
         del self.screen.delay
         self.assertEqual(self.screen.fps, None)
         self.assertEqual(self.screen.delay, None)
+
+    def test_compare(self):
+        base_string = 'Hello world!\nLine 2 is here'
+        expected_result = [('H', (0, 0)), ('e', (1, 0)), ('l', (2, 0)),
+                           ('l', (3, 0)), ('o', (4, 0)), (' ', (5, 0)),
+                           ('w', (6, 0)), ('o', (7, 0)), ('r', (8, 0)),
+                           ('l', (9, 0)), ('d', (10, 0)), ('!', (11, 0)),
+                           (' ', (12, 0)), (' ', (13, 0)), (' ', (14, 0)),
+                           (' ', (15, 0)), ('L', (0, 1)), ('i', (1, 1)),
+                           ('n', (2, 1)), ('e', (3, 1)), (' ', (4, 1)),
+                           ('2', (5, 1)), (' ', (6, 1)), ('i', (7, 1)),
+                           ('s', (8, 1)), (' ', (9, 1)), ('h', (10, 1)),
+                           ('e', (11, 1)), ('r', (12, 1)), ('e', (13, 1)),
+                           (' ', (14, 1)), (' ', (15, 1))]
+        comparrison = self.screen.compare_message(base_string)
+        self.assertEqual(comparrison, expected_result)
+
+        new_string = 'Hello kerbal!\nLine x is here'
+        comparrison = self.screen.compare_message(new_string)
+        expected_result = [('k', (6, 0)), ('e', (7, 0)), ('b', (9, 0)),
+                           ('a', (10, 0)), ('l', (11, 0)), ('!', (12, 0)),
+                           ('x', (5, 1))]
+        self.assertEqual(comparrison, expected_result)
+
+        short_string = 'Hi\nworld'
+        expected_result = [('i', (1, 0)), (' ', (2, 0)), (' ', (3, 0)),
+                           (' ', (4, 0)), (' ', (6, 0)), (' ', (7, 0)),
+                           (' ', (8, 0)), (' ', (9, 0)), (' ', (10, 0)),
+                           (' ', (11, 0)), (' ', (12, 0)), ('w', (0, 1)),
+                           ('o', (1, 1)), ('r', (2, 1)), ('l', (3, 1)),
+                           ('d', (4, 1)), (' ', (5, 1)), (' ', (7, 1)),
+                           (' ', (8, 1)), (' ', (10, 1)), (' ', (11, 1)),
+                           (' ', (12, 1)), (' ', (13, 1))]
+        self.assertEqual(self.screen.compare_message(short_string), expected_result)
 
 
 if __name__ == '__main__':
