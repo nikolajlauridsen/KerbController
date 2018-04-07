@@ -1,13 +1,18 @@
 from KerbController.FlightController import FlightController
 from KerbController.Utility.Math import mapvalue, eng_notate
+from KerbController.Utility.LCD import Screen
 
-Controller = FlightController('COM4', 9600)
+Controller = FlightController('COM4', 19200)
+lcd = Screen(Controller.controller, fps=5)
+lcd.flip('Hi!\nConnecting...')
 Kerb = FlightController.connect_krpc('FlightController')
 
 Controller.set_variable('prevYaw', 0)
 Controller.set_variable('prevPitch', 0)
 Controller.set_variable('prevThrust', '')
 Controller.set_variable('prevApoapsis', '')
+
+lcd.flip('Waiting\nfor vessel')
 
 
 @Controller.register_input_command('go')
@@ -71,7 +76,8 @@ def screen():
         line2 = '{}{}{}'.format(line2_label, " " * (16 - len(line2_label) - len(current_apoapsis)),
                                 current_apoapsis)
 
-        Controller.send_command(line1+line2)
+        msg = "{}\n{}".format(line1, line2)
+        lcd.flip(msg)
         Controller.set_variable('prevThrust', current_thrust)
         Controller.set_variable('prevaAoapsis', current_apoapsis)
 

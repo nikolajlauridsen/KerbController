@@ -1,3 +1,5 @@
+import time
+
 
 class Screen:
     def __init__(self, serial, fps=10, size=(16, 2)):
@@ -5,6 +7,7 @@ class Screen:
         self.prev_msg = ''
         self.con = serial
         self.size = size
+        self._last_transmit = 0
 
     @property
     def delay(self):
@@ -20,8 +23,48 @@ class Screen:
     def delay(self):
         self.fps = None
 
+    @property
+    def ready(self):
+        if time.time() - self._last_transmit >= self.delay:
+            return True
+        else:
+            return False
+
     def flip(self, msg):
-        pass
+        """
+        Compare and transmit the passed message, if time between frame has passed
+        :param msg: Message to be compared and transmitted
+        :return: bool determining if message was sent.
+        """
+        if self.ready:
+            msg = self.compare_message(msg)
+            if msg:
+                self.send_message(msg)
+                return True
+        # Nothing was sent return false
+        return False
+
+    def send_message(self, compared_msg):
+        """
+        Send the compared data over serial
+        Sends the message as two commands, one ordering to modify screen
+        and one with the actual data, which is ended with 255
+        :param compared_msg: list generated from self.compare_message
+        :return:
+        """
+        # 1: Send scr command
+        # 2: send x coord as byte
+        # 3: send y coord as byte
+        # 4: send character as character
+        # 5. Repeat from 2 for all characters
+        # 6. end command by sending a newline
+        self.con.write('scr\n'.encode('ascii'))
+        for char_pair in compared_msg:
+            self.con.write(char_pair[1][0].to_bytes(1, 'big', signed=False))
+            self.con.write(char_pair[1][1].to_bytes(1, 'big', signed=False))
+            self.con.write(char_pair[0].encode('ascii'))
+        self.con.write(0xff)
+        self._last_transmit = time.time()
 
     def compare_message(self, msg):
         """

@@ -1,5 +1,6 @@
 import unittest
 from KerbController.Utility.LCD import Screen
+import time
 
 
 class ScreenTest(unittest.TestCase):
@@ -67,6 +68,19 @@ class ScreenTest(unittest.TestCase):
                            (' ', (8, 1)), (' ', (10, 1)), (' ', (11, 1)),
                            (' ', (12, 1)), (' ', (13, 1))]
         self.assertEqual(self.screen.compare_message(short_string), expected_result)
+
+    def test_ready(self):
+        # Setting fps really high to make the test run faster
+        self.screen.fps = 1000000
+        # Screen should be ready from init
+        self.assertEqual(self.screen.ready, True)
+        # Simulate transmission
+        self.screen._last_transmit = time.time()
+        # Shouldn't be allowed to transmit right away
+        self.assertEqual(self.screen.ready, False)
+        # But after the delay has passed it should be
+        time.sleep(0.000001)
+        self.assertEqual(self.screen.ready, True)
 
 
 if __name__ == '__main__':

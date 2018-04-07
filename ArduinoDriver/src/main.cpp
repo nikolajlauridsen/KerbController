@@ -19,7 +19,11 @@ cutoff = 10
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 void setup() {
+  // Screen
+  lcd.init();
+  lcd.backlight();
   // Set up IO
+  lcd.print("Setting up.");
   pinMode(StageLight, OUTPUT);
   pinMode(SAS_INDI, OUTPUT);
   digitalWrite(StageLight, LOW);
@@ -27,13 +31,9 @@ void setup() {
   pinMode(StageBtn, INPUT);
   pinMode(Throttle, INPUT);
   pinMode(SAS, INPUT);
-  // Screen
-  lcd.init();
-  lcd.backlight();
-  lcd.setCursor(0,0);
-  lcd.print("Hello, world!");
-  Serial.begin(9600);
+  Serial.begin(19200);
   digitalWrite(StageLight, HIGH);
+  lcd.clear();
 }
 
 bool stageState = false;
@@ -48,6 +48,22 @@ unsigned int prevYaw;
 unsigned int prevPitch;
 bool prevSAS;
 bool currentSAS;
+
+void parseScreen(){
+    unsigned int x, y;
+    char c;
+    delay(100);
+    while (Serial.available() > 0){
+        x = Serial.read();
+        if (x == 255){
+            break;
+        }
+        y = Serial.read();
+        c = Serial.read();
+        lcd.setCursor(x,y);
+        lcd.write(c);
+    }
+}
 
 String command = "";
 void loop() {
@@ -98,44 +114,15 @@ void loop() {
 
   // Read inputs from computer
   if (Serial.available() > 0){
-      /*
-      lcd.print("Reading serial");
-      char readChar;
-      while (1){
-          readChar = Serial.read();
-          if (readChar == '\n'){
-              break;
-          } else {
-              command += readChar;
-          }
-      }
-      */
       command = Serial.readStringUntil('\n');
   }
 
   // Do stuff with input
   if (command.length() > 0){
-      Serial.println("Setting screen.");
-      lcd.clear();
-      lcd.setCursor(0,0);
-      if(command.length() > 16){
-          String line1 = command.substring(0, 16);
-          String line2 = command.substring(16, command.length());
-          lcd.print(line1);
-          lcd.setCursor(0, 1);
-          lcd.print(line2);
-      } else {
-          lcd.print(command);
+      if (command == "scr"){
+          Serial.println("Setting screen.");
+          parseScreen();
       }
-
-      /*
-      for(unsigned int i = 0; (i>command.length() && i < 16); i++){
-          lcd.print(command[i]);
-          if(i == 15){
-              lcd.setCursor(0,1);
-          }
-      }
-      */
   }
 
   // Reset input
