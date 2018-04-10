@@ -7,6 +7,12 @@ from krpc.error import RPCError
 
 class FlightController:
     def __init__(self, com_port, baud_rate):
+        """
+        Flight controller parsing commands and executing their associated functions.
+        :param com_port: Com port the Arduino is communicating on.
+        :param baud_rate: Serial speed.
+        :return: None.
+        """
         self.controller = serial.Serial(com_port, baud_rate)
         self.input_commands = dict()
         self.output_commands = list()
@@ -15,7 +21,11 @@ class FlightController:
     def parse_command(self):
         """
         Read and parse commands from serial.
-        :return: parsed command, parsed value
+        Reads each command until new line and splits it at :
+        This is done since there's no reason to send strings from the Arduino
+        to the master script, and allows for an easy way to pass values.
+        All values are parsed to a string.
+        :return: parsed command, parsed value.
         """
         cmd = self.controller.readline().decode('utf-8').strip()
         if ':' in cmd:
@@ -28,8 +38,8 @@ class FlightController:
         Sends a command over serial.
         Always sends it as a string, and separates commands with newline.
         :param command: command to send
-        :param end: end of command, works like end in strings.
-        :return:
+        :param end: end of command, works like end in strings, defaults to newline.
+        :return: None.
         """
         if type(command) != str:
             command = str(command)
@@ -45,6 +55,7 @@ class FlightController:
         is used for persistent variables between loops.
         :param name: Variable name.
         :param value: Variable value.
+        :return: None.
         """
         self.vars[name] = value
 
@@ -59,6 +70,10 @@ class FlightController:
     def register_input_command(self, command):
         """
         Decorator function for registering an input command.
+        The function defined with the decorator will be run, once the command string
+        passed to the decorator occurs on the serial port.
+        All registered commands will be passed the value from the command as a string
+        (as parsed by parse_command)
         :param command: expected command from serial port.
         """
         def decorator(func):
@@ -72,9 +87,10 @@ class FlightController:
 
     def register_output_command(self, func):
         """
-        Decorator for adding an output command send to the Arduino
-        :param func: function to be wrapped
-        :return: wrapped function
+        Decorator for adding an output command send to the Arduino.
+        Simply runs the registered function once per controller loop.
+        :param func: function to be wrapped.
+        :return: wrapped function.
         """
         self.output_commands.append(func)
 
@@ -86,6 +102,7 @@ class FlightController:
     def run_loop(self, fps=None):
         """
         Run the main loop, and start interpreting commands.
+        Should be called at the very end of your controller script.
         :param fps: refresh rate for the loop (ignores execution time ups)
         """
         # Calculate sleep time or set to None if 0.
@@ -118,9 +135,9 @@ class FlightController:
     @staticmethod
     def connect_krpc(name, **kwargs):
         """
-        Keep reconnecting to krpc server
-        :param name:
-        :return:
+        Keep attempting to connect to the krpc server.
+        :param name: Connection name appearing on the krpc plugin.
+        :return: krpc object.
         """
         print('Connecting to krpc server...')
         while True:
@@ -138,6 +155,13 @@ class FlightController:
 
     @staticmethod
     def get_ship(kerb):
+        """
+        Return a vessel object from a krpc object.
+        Will keep trying to return a ship until it's able to.
+        Allows you to wait for a launch.
+        :param kerb: krpc object.
+        :return: krpc vessel object.
+        """
         while True:
             try:
                 kerb.space_center.active_vessel.name
