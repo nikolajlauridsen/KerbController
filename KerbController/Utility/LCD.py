@@ -80,7 +80,7 @@ class Screen:
         # Padding the strings to fit 16 slots means we don't have to worry about short strings
         for i in range(len(lines)):
             if len(lines[i]) < self.size[0]:
-                lines[i] += " " * (self.size[0] - len(lines))
+                lines[i] += " " * (self.size[0] - len(lines[i]))
         buffer = []
 
         for n in range(self.size[1]):
